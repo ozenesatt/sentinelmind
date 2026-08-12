@@ -1,0 +1,10 @@
+﻿*.pem
+*.key
+*.tar
+wazuh-install-files*
+.env
+*.parameters.local.json
+main.json
+__pycache__/
+.venv/
+.DS_Store
