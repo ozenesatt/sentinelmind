@@ -65,4 +65,8 @@ kısıtı ile kilitlidir.
 
 ## Değişiklik Süreci
 
-Bu dosyada değişiklik = PR + karşı tarafın onayı. Doğrudan `main`'e push yok.
+Bu dosyada değişiklik = PR + karşı tarafın onayı. Doğrudan `main`'e push yok.  
+
+## Onaylar
+
+- **v1.0 — Sıla (Tespit & AI):** Onaylandı. `events` şeması risk skoru formülü için yeterli, `action_type` listesi Prowler senaryolarını karşılıyor, PII maskeleme sınırı uygulanabilir. — 29.08.2026
