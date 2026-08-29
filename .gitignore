@@ -11,3 +11,6 @@ __pycache__/
 
 .venv-prowler/
 output/
+
+# RAG ham belgeleri (telif + boyut) — indirme scripti ile alınır
+rag/corpus/
