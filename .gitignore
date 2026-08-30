@@ -14,3 +14,6 @@ output/
 
 # RAG ham belgeleri (telif + boyut) — indirme scripti ile alınır
 rag/corpus/
+
+# Geçici keşif/debug scriptleri
+explore_data.py
