@@ -20,6 +20,7 @@ Risk skoru modeli (CVSS Base + Environmental mantığının CSPM'e uyarlaması):
 
 import json
 from pathlib import Path
+from collections import defaultdict
 
 DATA = Path("output/prowler-71-findings.ocsf.json")
 
@@ -56,6 +57,17 @@ def get_categories(finding: dict) -> list:
     """Bir bulgunun kategori listesini döner (unmapped.categories)."""
     return finding.get("unmapped", {}).get("categories", [])
 
+def get_resource_name(finding: dict) -> str:
+    """
+    Bir bulgunun etkilediği kaynağın adını döner.
+    Yol: resources[0].data.metadata.name  (keşifte doğruladık)
+    Bulunamazsa 'subscription-level' döner (bazı bulgular kaynak-bağımsızdır).
+    """
+    resources = finding.get("resources", [])
+    if not resources:
+        return "subscription-level"
+    meta = resources[0].get("data", {}).get("metadata", {})
+    return meta.get("name") or "subscription-level"
 
 def score_finding(finding: dict) -> dict:
     """
@@ -94,11 +106,78 @@ def score_finding(finding: dict) -> dict:
         "score": total,
         "severity": severity,
         "categories": categories,
+        "resource": get_resource_name(finding),
         "rationale": "; ".join(rationale),
         "event_code": finding.get("metadata", {}).get("event_code", "?"),
         "message": finding.get("message", "")[:100],
     }
 
+def report_by_resource(scored_findings: list):
+    """
+    B GÖRÜNÜMÜ — Kaynağa göre risk profili.
+    'Hangi kaynak en riskli?' sorusunu cevaplar.
+    Her kaynağın: bulgu sayısı + toplam risk + en yüksek tekil skor.
+    """
+    from collections import defaultdict
+
+    # kaynak -> o kaynağın bulguları (skorlarıyla)
+    by_res = defaultdict(list)
+    for s in scored_findings:
+        by_res[s["resource"]].append(s)
+
+    # Her kaynak için özet çıkar
+    summaries = []
+    for resource, items in by_res.items():
+        total = sum(i["score"] for i in items)
+        max_score = max(i["score"] for i in items)
+        summaries.append({
+            "resource": resource,
+            "count": len(items),
+            "total_risk": total,
+            "max_score": max_score,
+        })
+
+    # En riskli kaynak üstte: toplam riske göre sırala
+    summaries.sort(key=lambda x: x["total_risk"], reverse=True)
+
+    print("\n" + "=" * 90)
+    print("B GÖRÜNÜMÜ — KAYNAK BAZLI RİSK PROFİLİ (en riskli → en az)")
+    print("=" * 90)
+    for s in summaries:
+        print(f"  {s['resource']}")
+        print(f"     bulgu sayısı: {s['count']:2}  |  toplam risk: {s['total_risk']:4}  |  en yüksek tekil skor: {s['max_score']}")
+
+def report_by_control(scored_findings: list):
+    """A GÖRÜNÜMÜ — Kontrole göre gruplama. 'Aynı hata nerede tekrarlıyor?'"""
+    by_code = defaultdict(list)
+    for s in scored_findings:
+        by_code[s["event_code"]].append(s)
+
+    # Her kontrol için: kaç kaynak, hangi skor, hangi kaynaklar
+    groups = []
+    for code, items in by_code.items():
+        groups.append({
+            "event_code": code,
+            "count": len(items),
+            "score": items[0]["score"],  # aynı kontrol = aynı skor
+            "resources": [i["resource"] for i in items],
+        })
+
+    # Önce en çok tekrar edenler, sonra skora göre
+    groups.sort(key=lambda x: (x["count"], x["score"]), reverse=True)
+
+    print("\n" + "=" * 90)
+    print("A GÖRÜNÜMÜ — KONTROL BAZLI GRUPLAMA (tekrar eden hatalar üstte)")
+    print("=" * 90)
+    for g in groups:
+        tekrar = f"{g['count']}x" if g["count"] > 1 else "1x"
+        print(f"  [{g['score']:3}] [{tekrar}] {g['event_code']}")
+        if g["count"] > 1:
+            print(f"        etkilenen kaynaklar: {', '.join(g['resources'])}")
+
+    # Özet: kaç tekil kontrol, kaç tanesi tekrarlıyor
+    multi = [g for g in groups if g["count"] > 1]
+    print(f"\n  Toplam {len(groups)} tekil kontrol, {len(multi)} tanesi birden fazla kaynakta.")
 
 def main():
     findings = json.loads(DATA.read_text(encoding="utf-8"))
@@ -112,6 +191,12 @@ def main():
 
     # 4) Önceliklendir: skora göre yüksekten düşüğe
     scored.sort(key=lambda x: x["score"], reverse=True)
+
+    # B görünümü: kaynak bazlı risk profili
+    report_by_resource(scored)
+
+    # A görünümü: kontrol bazlı gruplama
+    report_by_control(scored)
 
     # Sonucu göster
     print("\n" + "=" * 90)
