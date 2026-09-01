@@ -22,7 +22,7 @@ resource nsg 'Microsoft.Network/networkSecurityGroups@2023-11-01' = {
       {
         // KASITLI ZAYIF YAPILANDIRMA — demo amaçlı
         // Prowler bunu FAIL olarak raporlamalı.
-        // Bu NSG hicbir ag arayuzune bagli degil, gercek maruziyet yok.
+        // NSG soc-subnet'e baglidir; demo ortaminda aktif NIC/VM olmadigi icin gercek endpoint maruziyeti yok.
         name: 'DEMO-Insecure-SSH-Any'
         properties: {
           priority: 100
