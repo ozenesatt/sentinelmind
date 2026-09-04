@@ -17,3 +17,7 @@ rag/corpus/
 
 # Geçici keşif/debug scriptleri
 explore_data.py
+
+# RAG generated artifacts
+rag/chroma_db/
+rag/generated_prompt.txt
