@@ -16,17 +16,23 @@ def test_authoritative_fields_are_bound_from_incident():
             "schema_version": "1.0",
             "incident_id": "fake-incident-999",
             "title_tr": "Test analiz",
-            "summary_tr": "Model tarafindan uretilen test analizidir.",
-            "severity": "low",
-            "risk_explanation": (
-                "Model bu alani aciklar ancak risk skorunu belirlemez."
+            "summary_tr": (
+                "Model tarafindan uretilen test analizidir."
             ),
+            "severity": "low",
             "mitre_techniques": [],
             "affected_resources": [],
             "recommended_actions": [
                 {
                     "action_type": "none",
-                    "params": {},
+                     "params": {
+                        "ip": None,
+                        "username": None,
+                        "resource_id": None,
+                        "rule_name": None,
+                        "key_name": None,
+                        "reason": "Manuel inceleme gerekli.",
+},
                     "rationale_tr": "Manuel inceleme.",
                 }
             ],

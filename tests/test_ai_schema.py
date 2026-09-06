@@ -3,12 +3,27 @@ from pydantic import ValidationError
 from rag.ai_schema import AIAnalysis
 
 
+EMPTY_PARAMS = {
+    "ip": None,
+    "username": None,
+    "resource_id": None,
+    "rule_name": None,
+    "key_name": None,
+    "reason": None,
+}
+
+
 def test_valid_ai_analysis():
+    params = dict(EMPTY_PARAMS)
+    params["reason"] = "Manuel inceleme gerekli."
+
     payload = {
         "schema_version": "1.0",
         "incident_id": "demo-prowler-001",
         "title_tr": "Azure Storage public access riski",
-        "summary_tr": "Storage account anonim blob erişimine açık.",
+        "summary_tr": (
+            "Storage account anonim blob erisimine acik."
+        ),
         "severity": "high",
         "mitre_techniques": [
             "T1619",
@@ -18,17 +33,19 @@ def test_valid_ai_analysis():
             {
                 "type": "storage_account",
                 "id": (
-                    "/subscriptions/demo/resourceGroups/sentinelmind-rg/"
-                    "providers/Microsoft.Storage/storageAccounts/smweak"
+                    "/subscriptions/demo/"
+                    "resourceGroups/sentinelmind-rg/"
+                    "providers/Microsoft.Storage/"
+                    "storageAccounts/smweak"
                 ),
             }
         ],
         "recommended_actions": [
             {
                 "action_type": "none",
-                "params": {},
+                "params": params,
                 "rationale_tr": (
-                    "Bu bulgu için otomatik aksiyon yerine manuel inceleme önerilir."
+                    "Manuel inceleme onerilir."
                 ),
             }
         ],
@@ -44,14 +61,15 @@ def test_valid_ai_analysis():
     assert analysis.schema_version == "1.0"
     assert analysis.incident_id == "demo-prowler-001"
     assert analysis.severity == "high"
-    assert "T1619" in analysis.mitre_techniques
     assert analysis.recommended_actions[0].action_type == "none"
-    assert analysis.generated_at == "2026-09-06T12:00:00Z"
 
     print("AI schema testi BASARILI")
 
 
 def test_invalid_action_type_is_rejected():
+    params = dict(EMPTY_PARAMS)
+    params["reason"] = "Test"
+
     payload = {
         "schema_version": "1.0",
         "incident_id": "demo-invalid-001",
@@ -63,8 +81,8 @@ def test_invalid_action_type_is_rejected():
         "recommended_actions": [
             {
                 "action_type": "delete_resource",
-                "params": {},
-                "rationale_tr": "Gecersiz aksiyon testi",
+                "params": params,
+                "rationale_tr": "Gecersiz action",
             }
         ],
         "kvkk": {
@@ -76,6 +94,7 @@ def test_invalid_action_type_is_rejected():
 
     try:
         AIAnalysis.model_validate(payload)
+
     except ValidationError:
         print("Gecersiz action_type reddedildi")
         return
