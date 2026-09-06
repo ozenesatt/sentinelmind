@@ -2,13 +2,29 @@ import re
 from typing import Any
 
 
-IP_PATTERN = re.compile(
+EMAIL_RE = re.compile(
+    r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b"
+)
+
+IP_RE = re.compile(
     r"\b(?:\d{1,3}\.){3}\d{1,3}\b"
 )
 
-EMAIL_PATTERN = re.compile(
-    r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b"
+TCKN_RE = re.compile(
+    r"\b\d{11}\b"
 )
+
+
+def is_valid_ip(value: str) -> bool:
+    parts = value.split(".")
+
+    if len(parts) != 4:
+        return False
+
+    try:
+        return all(0 <= int(part) <= 255 for part in parts)
+    except ValueError:
+        return False
 
 
 def is_valid_tckn(value: str) -> bool:
@@ -20,92 +36,127 @@ def is_valid_tckn(value: str) -> bool:
 
     digits = [int(x) for x in value]
 
-    check10 = (
-        (sum(digits[0:9:2]) * 7)
+    digit_10 = (
+        7 * sum(digits[0:9:2])
         - sum(digits[1:8:2])
     ) % 10
 
-    check11 = sum(digits[:10]) % 10
+    if digit_10 != digits[9]:
+        return False
 
-    return check10 == digits[9] and check11 == digits[10]
+    digit_11 = sum(digits[:10]) % 10
+
+    return digit_11 == digits[10]
+
+
+class _Masker:
+    def __init__(self):
+        self.mapping: dict[str, str] = {}
+        self.counters = {
+            "EMAIL": 0,
+            "IP": 0,
+            "TCKN": 0,
+            "USERNAME": 0,
+        }
+
+        # Aynı gerçek değer tekrar görülürse
+        # aynı placeholder kullanılabilsin.
+        self.reverse_mapping: dict[tuple[str, str], str] = {}
+
+    def _placeholder(self, category: str, value: str) -> str:
+        key = (category, value)
+
+        if key in self.reverse_mapping:
+            return self.reverse_mapping[key]
+
+        self.counters[category] += 1
+
+        placeholder = (
+            f"[{category}_{self.counters[category]}]"
+        )
+
+        self.mapping[placeholder] = value
+        self.reverse_mapping[key] = placeholder
+
+        return placeholder
+
+    def mask_text(self, text: str) -> str:
+        def replace_email(match):
+            value = match.group(0)
+            return self._placeholder("EMAIL", value)
+
+        text = EMAIL_RE.sub(replace_email, text)
+
+        def replace_ip(match):
+            value = match.group(0)
+
+            if not is_valid_ip(value):
+                return value
+
+            return self._placeholder("IP", value)
+
+        text = IP_RE.sub(replace_ip, text)
+
+        def replace_tckn(match):
+            value = match.group(0)
+
+            if not is_valid_tckn(value):
+                return value
+
+            return self._placeholder("TCKN", value)
+
+        text = TCKN_RE.sub(replace_tckn, text)
+
+        return text
+
+    def mask_structure(self, value: Any, key: str | None = None):
+        if isinstance(value, dict):
+            return {
+                child_key: self.mask_structure(
+                    child_value,
+                    key=child_key,
+                )
+                for child_key, child_value in value.items()
+            }
+
+        if isinstance(value, list):
+            return [
+                self.mask_structure(item)
+                for item in value
+            ]
+
+        if isinstance(value, tuple):
+            return tuple(
+                self.mask_structure(item)
+                for item in value
+            )
+
+        if isinstance(value, str):
+            # username alanını anahtar üzerinden de koruyoruz.
+            if key and key.lower() in {
+                "username",
+                "user_name",
+                "user",
+            }:
+                return self._placeholder(
+                    "USERNAME",
+                    value,
+                )
+
+            return self.mask_text(value)
+
+        return value
 
 
 def mask_text(text: str):
-    mapping = {}
-    counters = {
-        "IP": 0,
-        "EMAIL": 0,
-        "TCKN": 0,
-    }
+    masker = _Masker()
+    masked = masker.mask_text(text)
 
-    def replace_email(match):
-        original = match.group(0)
-        counters["EMAIL"] += 1
-        placeholder = f"[EMAIL_{counters['EMAIL']}]"
-        mapping[placeholder] = original
-        return placeholder
-
-    def replace_ip(match):
-        original = match.group(0)
-
-        parts = original.split(".")
-        if any(int(part) > 255 for part in parts):
-            return original
-
-        counters["IP"] += 1
-        placeholder = f"[IP_{counters['IP']}]"
-        mapping[placeholder] = original
-        return placeholder
-
-    def replace_tckn(match):
-        original = match.group(0)
-
-        if not is_valid_tckn(original):
-            return original
-
-        counters["TCKN"] += 1
-        placeholder = f"[TCKN_{counters['TCKN']}]"
-        mapping[placeholder] = original
-        return placeholder
-
-    text = EMAIL_PATTERN.sub(replace_email, text)
-    text = IP_PATTERN.sub(replace_ip, text)
-    text = re.sub(r"\b\d{11}\b", replace_tckn, text)
-
-    return text, mapping
+    return masked, masker.mapping
 
 
 def mask_structure(data: Any):
-    mapping = {}
+    masker = _Masker()
+    masked = masker.mask_structure(data)
 
-    if isinstance(data, dict):
-        masked = {}
-
-        for key, value in data.items():
-            # Structured username alanını doğrudan maskele.
-            if key.lower() == "username" and value:
-                placeholder = "[USERNAME_1]"
-                mapping[placeholder] = str(value)
-                masked[key] = placeholder
-                continue
-
-            masked_value, child_mapping = mask_structure(value)
-            masked[key] = masked_value
-            mapping.update(child_mapping)
-
-        return masked, mapping
-
-    if isinstance(data, list):
-        masked_list = []
-
-        for item in data:
-            masked_item, child_mapping = mask_structure(item)
-            masked_list.append(masked_item)
-            mapping.update(child_mapping)
-
-        return masked_list, mapping
-
-    if isinstance(data, str):
-        return mask_text(data)
-
-    return data, mapping
+    return masked, masker.mapping
