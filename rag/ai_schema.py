@@ -31,6 +31,8 @@ class KvkkAssessment(BaseModel):
 class AIAnalysis(BaseModel):
     schema_version: Literal["1.0"] = "1.0"
 
+    incident_id: str
+
     title_tr: str
     summary_tr: str
 
@@ -43,14 +45,12 @@ class AIAnalysis(BaseModel):
 
     risk_explanation: str
 
-    mitre_techniques: list[str] = Field(default_factory=list)
+    mitre_techniques: list[str]
 
-    affected_resources: list[AffectedResource] = Field(
-        default_factory=list
-    )
+    affected_resources: list[AffectedResource]
 
-    recommended_actions: list[RecommendedAction] = Field(
-        default_factory=list
-    )
+    recommended_actions: list[RecommendedAction]
 
     kvkk: KvkkAssessment
+
+    generated_at: str
