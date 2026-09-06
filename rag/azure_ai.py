@@ -41,6 +41,7 @@ def analyze_with_azure(
 
     response = client.responses.parse(
         model=deployment,
+        store=False,
         input=prompt,
         text_format=AIAnalysis,
     )

@@ -43,8 +43,6 @@ class AIAnalysis(BaseModel):
         "critical",
     ]
 
-    risk_explanation: str
-
     mitre_techniques: list[str]
 
     affected_resources: list[AffectedResource]

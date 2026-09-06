@@ -10,9 +10,6 @@ def test_valid_ai_analysis():
         "title_tr": "Azure Storage public access riski",
         "summary_tr": "Storage account anonim blob erişimine açık.",
         "severity": "high",
-        "risk_explanation": (
-            "Deterministik risk skoru yüksek maruziyet nedeniyle 78 olarak hesaplandı."
-        ),
         "mitre_techniques": [
             "T1619",
             "T1530",
@@ -61,7 +58,6 @@ def test_invalid_action_type_is_rejected():
         "title_tr": "Test",
         "summary_tr": "Test",
         "severity": "high",
-        "risk_explanation": "Test",
         "mitre_techniques": [],
         "affected_resources": [],
         "recommended_actions": [
