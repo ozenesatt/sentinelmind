@@ -1,69 +1,15 @@
 import json
 from pathlib import Path
 
-from engine.filter_engine import score_finding
+from eval.scoring_v2 import (
+    V2_THRESHOLD,
+    V2_VERSION,
+    score_finding_v2,
+)
 
 
 DATA = Path("output/prowler-71-findings.ocsf.json")
 LABELS = Path("eval/labeled_findings.json")
-
-THRESHOLD = 60
-
-
-def contextual_bonus(scored: dict) -> tuple[int, list[str]]:
-    """
-    Genel kategori agirliklarini bozmak yerine,
-    guvenlik etkisi acik olan kontrol ailelerine
-    aciklanabilir context bonuslari uygular.
-    """
-
-    code = scored["event_code"]
-    bonus = 0
-    reasons = []
-
-    # Key Vault dogasi geregi secret/key servisi.
-    if code.startswith("keyvault_"):
-        bonus += 15
-        reasons.append("keyvault-sensitive-service +15")
-
-    # Network telemetry kaybi detection/forensics icin kritik.
-    if code in {
-        "network_flow_log_captured_sent",
-        "network_watcher_enabled",
-    }:
-        bonus += 10
-        reasons.append("network-telemetry +10")
-
-    # Private endpoint eksigi trust-boundary riskidir.
-    if code == "storage_ensure_private_endpoints_in_storage_accounts":
-        bonus += 10
-        reasons.append("private-endpoint-boundary +10")
-
-    # Secure transfer dogrudan transport security kontroludur.
-    if code == "storage_secure_transfer_required_is_enabled":
-        bonus += 5
-        reasons.append("secure-transport +5")
-
-    return bonus, reasons
-
-
-def score_v2(finding: dict) -> dict:
-    scored = score_finding(finding)
-
-    bonus, reasons = contextual_bonus(scored)
-
-    v2_score = min(
-        scored["score"] + bonus,
-        100,
-    )
-
-    return {
-        **scored,
-        "baseline_score": scored["score"],
-        "v2_score": v2_score,
-        "v2_bonus": bonus,
-        "v2_reasons": reasons,
-    }
 
 
 def calculate_metrics(rows):
@@ -71,7 +17,7 @@ def calculate_metrics(rows):
 
     for row in rows:
         expected = row["expected_positive"]
-        predicted = row["v2_score"] >= THRESHOLD
+        predicted = row["v2_score"] >= V2_THRESHOLD
 
         if expected is True and predicted is True:
             tp += 1
@@ -126,7 +72,7 @@ def main():
     rows = []
 
     for finding, label in zip(fails, labels):
-        scored = score_v2(finding)
+        scored = score_finding_v2(finding)
 
         rows.append(
             {
@@ -152,7 +98,9 @@ def main():
     print("SENTINELMIND EXPERIMENTAL SCORING V2")
     print("=" * 72)
 
-    print(f"Threshold: {THRESHOLD}")
+    print(f"Version: {V2_VERSION}")
+    print(f"Threshold: {V2_THRESHOLD}")
+
     print()
     print(f"TP: {tp}")
     print(f"FP: {fp}")
@@ -168,8 +116,13 @@ def main():
     print("Degisen bulgular:")
 
     for row in rows:
-        old_pred = row["baseline_score"] >= THRESHOLD
-        new_pred = row["v2_score"] >= THRESHOLD
+        old_pred = (
+            row["baseline_score"] >= V2_THRESHOLD
+        )
+
+        new_pred = (
+            row["v2_score"] >= V2_THRESHOLD
+        )
 
         if old_pred != new_pred:
             print(
