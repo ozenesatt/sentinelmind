@@ -1,0 +1,33 @@
+title: Windows Successful RDP Logon
+id: 3e8a51c6-0a43-4d48-b775-4f239e829f68
+status: experimental
+description: >
+  Detects successful Windows Remote Desktop logons using
+  Security Event ID 4624 with Logon Type 10.
+  The event is treated as remote-access telemetry and not
+  as proof of malicious activity by itself.
+
+author: SentinelMind Detection & AI
+date: 2026-09-09
+
+logsource:
+  product: windows
+  service: security
+
+detection:
+  selection:
+    EventID: 4624
+    LogonType: 10
+
+  condition: selection
+
+falsepositives:
+  - Legitimate administrator RDP access
+  - Authorized remote support activity
+  - Normal remote management activity
+
+level: medium
+
+tags:
+  - attack.lateral-movement
+  - attack.t1021.001

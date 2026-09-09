@@ -1,0 +1,33 @@
+title: Windows RDP Failed Logon
+id: 5724b8cf-9d5f-47d3-9c70-81f88960e1ab
+status: experimental
+description: >
+  Detects failed Windows Remote Desktop logon attempts using
+  Security Event ID 4625 with Logon Type 10.
+
+author: SentinelMind Detection & AI
+date: 2026-09-09
+
+logsource:
+  product: windows
+  service: security
+
+detection:
+  selection:
+    EventID: 4625
+    LogonType: 10
+
+  condition: selection
+
+falsepositives:
+  - User mistyped password during a legitimate RDP connection
+  - Expired credentials
+  - Administrative connection with stale credentials
+
+level: high
+
+tags:
+  - attack.credential-access
+  - attack.t1110
+  - attack.lateral-movement
+  - attack.t1021.001
