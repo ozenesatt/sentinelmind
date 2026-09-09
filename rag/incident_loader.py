@@ -10,7 +10,7 @@ def load_incident(path: str) -> dict:
             f"Incident dosyasi bulunamadi: {file_path}"
         )
 
-    with file_path.open("r", encoding="utf-8") as f:
+    with file_path.open("r", encoding="utf-8-sig") as f:
         incident = json.load(f)
 
     required_fields = [

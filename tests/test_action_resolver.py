@@ -50,7 +50,7 @@ def test_disable_user_placeholder_is_resolved():
     print("disable_user placeholder resolve BASARILI")
 
 
-def test_unknown_placeholder_is_not_resolved():
+def test_unknown_placeholder_is_rejected():
     pii_mapping = {
         "[IP_1]": "203.0.113.44",
     }
@@ -63,17 +63,22 @@ def test_unknown_placeholder_is_not_resolved():
         "rationale_tr": "Test",
     }
 
-    resolved = resolve_action_params(
-        action,
-        pii_mapping,
+    try:
+        resolve_action_params(
+            action,
+            pii_mapping,
+        )
+
+    except ValueError:
+        print("Unknown placeholder fail-closed BASARILI")
+        return
+
+    raise AssertionError(
+        "Unknown placeholder kabul edildi!"
     )
-
-    assert resolved["params"]["ip"] == "[IP_999]"
-
-    print("Unknown placeholder koruma testi BASARILI")
 
 
 if __name__ == "__main__":
     test_block_ip_placeholder_is_resolved()
     test_disable_user_placeholder_is_resolved()
-    test_unknown_placeholder_is_not_resolved()
+    test_unknown_placeholder_is_rejected()

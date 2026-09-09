@@ -1,4 +1,10 @@
+import re
 from typing import Any
+
+
+PLACEHOLDER_RE = re.compile(
+    r"\[(?:IP|USERNAME|EMAIL|TCKN)_\d+\]"
+)
 
 
 def resolve_placeholders(
@@ -6,13 +12,10 @@ def resolve_placeholders(
     pii_mapping: dict[str, str],
 ) -> Any:
     """
-    AI tarafindan dondurulen action parametrelerindeki
-    PII placeholder'larini trusted application layer'da
-    gercek degerlerine cevirir.
+    Known PII placeholder'larini trusted mapping ile cozer.
 
-    Ornek:
-    [IP_1] -> 203.0.113.44
-    [USERNAME_1] -> demo-user
+    Mapping'de bulunmayan placeholder varsa fail-closed
+    davranir ve ValueError firlatir.
     """
 
     if isinstance(value, dict):
@@ -43,8 +46,20 @@ def resolve_placeholders(
         )
 
     if isinstance(value, str):
-        if value in pii_mapping:
-            return pii_mapping[value]
+        placeholders = PLACEHOLDER_RE.findall(value)
+
+        for placeholder in placeholders:
+            if placeholder not in pii_mapping:
+                raise ValueError(
+                    "Unknown PII placeholder rejected: "
+                    f"{placeholder}"
+                )
+
+        for placeholder in placeholders:
+            value = value.replace(
+                placeholder,
+                pii_mapping[placeholder],
+            )
 
         return value
 
@@ -56,10 +71,10 @@ def resolve_action_params(
     pii_mapping: dict[str, str],
 ) -> dict:
     """
-    Recommended action'in params alanini resolve eder.
+    Recommended action params alanini trusted
+    application layer'da resolve eder.
 
-    Action tipi degistirilmez.
-    Sadece params icindeki bilinen placeholder'lar cozulur.
+    Action type degistirilmez.
     """
 
     resolved = dict(action)
