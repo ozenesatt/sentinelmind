@@ -1,11 +1,12 @@
-﻿import os
+﻿import hmac
+import os
 import uuid
 from typing import Any, Literal
 from uuid import UUID
 
 import psycopg2
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, Header, HTTPException
 from psycopg2.extras import Json, RealDictCursor
 from pydantic import BaseModel, Field
 
@@ -46,6 +47,13 @@ class ApproveRequest(BaseModel):
 
 class RejectRequest(BaseModel):
     rejected_by: str
+
+
+class TeamsActionRequest(BaseModel):
+    sentinelmind_action: Literal["approve", "reject"]
+    action_id: UUID
+    incident_id: UUID
+    actor: str = Field(min_length=1, max_length=200)
 
 
 @app.get("/health")
@@ -400,3 +408,48 @@ def reject_action(
             status_code=503,
             detail="database unavailable",
         )
+
+def verify_teams_callback_token(token: str | None):
+    expected = os.getenv("TEAMS_CALLBACK_TOKEN")
+
+    if not expected:
+        raise HTTPException(
+            status_code=503,
+            detail="teams callback authentication not configured",
+        )
+
+    if token is None or not hmac.compare_digest(token, expected):
+        raise HTTPException(
+            status_code=401,
+            detail="invalid teams callback token",
+        )
+
+
+@app.post("/teams/actions")
+def handle_teams_action(
+    body: TeamsActionRequest,
+    x_sentinelmind_token: str | None = Header(default=None),
+):
+    verify_teams_callback_token(x_sentinelmind_token)
+    action = get_action(body.action_id)
+
+    if str(action["incident_id"]) != str(body.incident_id):
+        raise HTTPException(
+            status_code=409,
+            detail="action does not belong to incident",
+        )
+
+    if body.sentinelmind_action == "approve":
+        return approve_action(
+            body.action_id,
+            ApproveRequest(
+                approved_by=body.actor,
+            ),
+        )
+
+    return reject_action(
+        body.action_id,
+        RejectRequest(
+            rejected_by=body.actor,
+        ),
+    )
