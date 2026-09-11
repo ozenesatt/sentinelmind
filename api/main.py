@@ -48,6 +48,13 @@ class RejectRequest(BaseModel):
     rejected_by: str
 
 
+class TeamsActionRequest(BaseModel):
+    sentinelmind_action: Literal["approve", "reject"]
+    action_id: UUID
+    incident_id: UUID
+    actor: str = Field(min_length=1, max_length=200)
+
+
 @app.get("/health")
 def health():
     try:
@@ -400,3 +407,28 @@ def reject_action(
             status_code=503,
             detail="database unavailable",
         )
+
+@app.post("/teams/actions")
+def handle_teams_action(body: TeamsActionRequest):
+    action = get_action(body.action_id)
+
+    if str(action["incident_id"]) != str(body.incident_id):
+        raise HTTPException(
+            status_code=409,
+            detail="action does not belong to incident",
+        )
+
+    if body.sentinelmind_action == "approve":
+        return approve_action(
+            body.action_id,
+            ApproveRequest(
+                approved_by=body.actor,
+            ),
+        )
+
+    return reject_action(
+        body.action_id,
+        RejectRequest(
+            rejected_by=body.actor,
+        ),
+    )
