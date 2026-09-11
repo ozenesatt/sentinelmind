@@ -148,6 +148,79 @@ def get_incident(incident_id: UUID):
         )
 
 
+
+@app.get("/ai-analyses")
+def list_ai_analyses():
+    try:
+        with connect_db() as conn:
+            with conn.cursor(
+                cursor_factory=RealDictCursor
+            ) as cur:
+                cur.execute(
+                    """
+                    SELECT
+                        id,
+                        incident_id,
+                        payload,
+                        pii_masked,
+                        created_at
+                    FROM ai_analyses
+                    ORDER BY created_at DESC, id DESC;
+                    """
+                )
+                rows = cur.fetchall()
+
+        return [dict(row) for row in rows]
+
+    except psycopg2.Error:
+        raise HTTPException(
+            status_code=503,
+            detail="database unavailable",
+        )
+
+
+@app.get("/incidents/{incident_id}/analysis")
+def get_incident_analysis(incident_id: UUID):
+    try:
+        with connect_db() as conn:
+            with conn.cursor(
+                cursor_factory=RealDictCursor
+            ) as cur:
+                cur.execute(
+                    """
+                    SELECT
+                        id,
+                        incident_id,
+                        payload,
+                        pii_masked,
+                        created_at
+                    FROM ai_analyses
+                    WHERE incident_id = %s
+                    ORDER BY created_at DESC, id DESC
+                    LIMIT 1;
+                    """,
+                    (str(incident_id),),
+                )
+                row = cur.fetchone()
+
+        if row is None:
+            raise HTTPException(
+                status_code=404,
+                detail="analysis not found",
+            )
+
+        return dict(row)
+
+    except HTTPException:
+        raise
+
+    except psycopg2.Error:
+        raise HTTPException(
+            status_code=503,
+            detail="database unavailable",
+        )
+
+
 @app.get("/actions")
 def list_actions():
     try:
