@@ -1,0 +1,12 @@
+{
+  "incident_id": "demo-prowler-001",
+  "event_ids": [101, 102],
+  "source": "prowler",
+  "resource_id": "/subscriptions/demo/resourceGroups/sentinelmind-rg/providers/Microsoft.Storage/storageAccounts/smweak",
+  "finding": "Storage account allows anonymous public blob access and public network access.",
+  "risk_score": 78,
+  "severity": "high",
+  "source_mitre_ids": [],
+  "username": "demo-user",
+  "src_ip": "203.0.113.44"
+}
