@@ -385,7 +385,7 @@ SentinelMind LLM'e güvenlik kontrolünün tamamını devretmez.
 
 ## Başlık
 
-**Functional MVP Completed**
+**Functional MVP Validated**
 
 ## Tamamlananlar
 
