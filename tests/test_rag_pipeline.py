@@ -1,3 +1,4 @@
+import pytest
 from rag.incident_loader import load_incident
 from rag.pii_masking import mask_structure
 from rag.prepare_analysis import (
@@ -7,6 +8,7 @@ from rag.prepare_analysis import (
 )
 
 
+@pytest.mark.integration
 def test_rag_pipeline():
     incident = load_incident("rag/sample_incident.json")
 

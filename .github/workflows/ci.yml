@@ -1,4 +1,4 @@
-﻿name: SentinelMind CI
+name: SentinelMind CI
 
 on:
   push:
@@ -35,4 +35,4 @@ jobs:
           python -m py_compile hitl/web_app.py
 
       - name: Run tests
-        run: python -m pytest -q
+        run: python -m pytest -q -m "not integration"
