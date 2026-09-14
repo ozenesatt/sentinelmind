@@ -140,6 +140,8 @@ Ancak:
 
 **Bu bağımsız holdout sonucu değildir.**
 
+İzole Azure holdout altyapısı (`infra/holdout.bicep`) eklenmiş ve Bicep build ile doğrulanmıştır. Bağımsız veri seti ve gerçek holdout sonucu henüz üretilmemiştir.
+
 Independent validation yeni unseen Prowler data gerektirir.
 
 ---
@@ -407,10 +409,16 @@ SentinelMind LLM'e güvenlik kontrolünün tamamını devretmez.
 
 ## Final Kapanış
 
-- PR #15 merge
+Tamamlananlar:
+
+- PR #15 merged
+- final documentation integration
+- main CI validation
+
+Kalanlar:
+
 - final merged-main regression
-- documentation integration
-- CI / packaging
+- root README / delivery cleanup
 - presentation
 
 ---

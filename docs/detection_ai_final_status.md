@@ -134,7 +134,9 @@ Mevcut bileşenler:
 - holdout evaluator
 - metric calculation
 
-Gerçek holdout sonucu henüz yoktur.
+Isolated Azure holdout infrastructure (`infra/holdout.bicep`) hazırlanmış ve Bicep build ile doğrulanmıştır.
+
+Bu altyapı bağımsız test ortamını sağlar; ancak gerçek independent holdout sonucu henüz yoktur.
 
 Yeni ve tuning sırasında görülmemiş Prowler verisi gerekmektedir.
 
@@ -310,9 +312,8 @@ Teknik detay:
 
 Mandatory:
 
-- PR #15 review / merge
 - final merged-main regression
-- final documentation integration
+- final repository README / delivery cleanup
 - final presentation
 
 External / optional:
@@ -333,10 +334,9 @@ Detection evaluation altyapısı ölçülebilir ve tekrar çalıştırılabilir 
 
 Kalan işler ağırlıklı olarak:
 
-- merge
-- independent validation
-- final regression
-- documentation
+- final merged-main regression
+- repository / delivery cleanup
 - presentation
+- optional independent validation
 
 aşamalarıdır.
