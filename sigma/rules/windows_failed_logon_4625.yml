@@ -1,0 +1,30 @@
+title: Windows Failed Logon
+id: 90e2140c-9d8f-4ad4-b372-49d532ab8f73
+status: experimental
+description: >
+  Detects Windows failed logon events using Security Event ID 4625.
+  This rule is used as a SentinelMind detection validation baseline.
+
+author: SentinelMind Detection & AI
+date: 2026-09-09
+
+logsource:
+  product: windows
+  service: security
+
+detection:
+  selection:
+    EventID: 4625
+
+  condition: selection
+
+falsepositives:
+  - User mistyped password
+  - Expired or cached credentials
+  - Misconfigured service account
+
+level: medium
+
+tags:
+  - attack.credential-access
+  - attack.t1110
