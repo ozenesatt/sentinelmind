@@ -125,22 +125,43 @@ Bu nedenle finalde yalnızca exploratory/tuning-set result olarak sunulur.
 
 ## 6. Holdout Validation
 
-Independent holdout workflow hazırlanmıştır.
+Independent holdout validation tamamlanmıştır.
 
-Mevcut bileşenler:
+Ayrı Azure ortamı:
 
-- holdout dataset builder
-- blind human labeling workflow
-- holdout evaluator
-- metric calculation
+`sentinelmind-holdout-rg`
 
-Isolated Azure holdout infrastructure (`infra/holdout.bicep`) hazırlanmış ve Bicep build ile doğrulanmıştır.
+Tuning setindeki eski 42 unique FAIL check ile yeni holdout FAIL check'leri arasında:
 
-Bu altyapı bağımsız test ortamını sağlar; ancak gerçek independent holdout sonucu henüz yoktur.
+`OVERLAP: []`
 
-Yeni ve tuning sırasında görülmemiş Prowler verisi gerekmektedir.
+Yeni holdout check'leri:
 
----
+- network_http_internet_access_restricted
+- network_rdp_internet_access_restricted
+- network_udp_internet_access_restricted
+- network_subnet_nsg_associated
+
+Holdout sonucu:
+
+- Holdout N: 4
+- Positive: 4
+- Negative: 0
+- TP: 4
+- FP: 0
+- FN: 0
+- TN: 0
+- Precision: 1.000
+- Recall: 1.000
+- F1: 1.000
+
+Frozen Scoring V2 v1.0 kuralları holdout sonucu görülmeden önce sabitlenmiştir.
+
+Bu validation positive-only olduğu için unseen negative örneklerde false-positive davranışını ölçmez.
+
+Doğru sınıflandırma:
+
+**Controlled independent holdout validation — positive-only, N=4**
 
 ## 7. Sigma Detection
 
@@ -318,7 +339,6 @@ Mandatory:
 
 External / optional:
 
-- independent Prowler holdout dataset
 - real Wazuh 4625 validation
 - second Wazuh → AI E2E scenario
 

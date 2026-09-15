@@ -140,9 +140,17 @@ Ancak:
 
 **Bu bağımsız holdout sonucu değildir.**
 
-İzole Azure holdout altyapısı (`infra/holdout.bicep`) eklenmiş ve Bicep build ile doğrulanmıştır. Bağımsız veri seti ve gerçek holdout sonucu henüz üretilmemiştir.
+İzole Azure holdout altyapısı (`infra/holdout.bicep`) ile gerçek controlled independent holdout validation tamamlanmıştır. Frozen Scoring V2 v1.0, tuning setinde bulunmayan 4 unseen positive finding'in 4/4'ünü doğru önceliklendirmiştir. Holdout positive-only olduğu için unseen negative örneklerde false-positive davranışı ayrıca ölçülmemiştir.
 
-Independent validation yeni unseen Prowler data gerektirir.
+Independent controlled holdout validation tamamlandı:
+
+- 4 unseen positive finding
+- TP: 4
+- FN: 0
+- Recall: 1.000
+- positive-only holdout
+
+Bu test unseen negative örnek içermediği için false-positive generalization sonucu olarak kullanılmaz.
 
 ---
 
