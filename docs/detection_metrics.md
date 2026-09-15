@@ -129,23 +129,58 @@ kanıtı olarak sunulmaz.
 
 Scoring V2 v1.0 holdout verisi görülmeden önce Git üzerinde freeze edilmiştir.
 
-Holdout workflow aşağıdaki bileşenleri içerir:
+Ayrı bir Azure Resource Group kullanılmıştır:
 
-- independent dataset builder
-- blind human labeling workflow
-- holdout evaluator
-- TP / FP / FN / TN calculation
-- Precision
-- Recall
-- F1 Score
+`sentinelmind-holdout-rg`
 
-Gerçek independent holdout sonucu için yeni ve daha önce tuning sırasında
-kullanılmamış Prowler verisi gereklidir.
+Holdout scan yalnızca tuning setinde bulunmayan dört yeni network check üzerinde çalıştırılmıştır:
 
-Bu veri henüz mevcut olmadığı için bağımsız holdout sonucu raporlanmamaktadır.
+- `network_http_internet_access_restricted`
+- `network_rdp_internet_access_restricted`
+- `network_udp_internet_access_restricted`
+- `network_subnet_nsg_associated`
 
----
+Eski tuning FAIL check'leriyle otomatik overlap kontrolü:
 
+`OVERLAP: []`
+
+Prowler scan sonucu:
+
+- FAIL: 4
+- PASS: 1
+
+Evaluation yalnızca FAIL finding'lerin önceliklendirilmesini ölçtüğü için holdout değerlendirmesine 4 FAIL finding dahil edilmiştir.
+
+Human labeling sırasında V2 risk score ve prediction gösterilmemiştir.
+
+Frozen V2 v1.0 sonucu:
+
+| Metric | Value |
+|---|---:|
+| Holdout N | 4 |
+| Positive | 4 |
+| Negative | 0 |
+| TP | 4 |
+| FP | 0 |
+| FN | 0 |
+| TN | 0 |
+| Precision | 1.000 |
+| Recall | 1.000 |
+| F1 Score | 1.000 |
+
+Frozen V2, tuning sırasında görülmeyen dört high-priority finding'in 4/4'ünü yakalamıştır.
+
+### Holdout Sınırlaması
+
+Bu kontrollü holdout yalnızca positive örneklerden oluşmaktadır.
+
+Bu nedenle sonuç, unseen positive finding'ler üzerindeki false-negative davranışı hakkında kanıt sağlar ancak unseen negative finding'ler olmadığı için false-positive davranışını bağımsız olarak ölçmez.
+
+Sonuç şu şekilde yorumlanmalıdır:
+
+**Controlled independent holdout validation — positive-only, N=4**
+
+Bu sonuç genel sistem performansının %100 olduğu şeklinde yorumlanmamalıdır.
 ## 7. Sigma & Correlation Validation
 
 Detection katmanında aşağıdaki senaryolar ayrıca test edilmiştir:
