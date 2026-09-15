@@ -129,7 +129,7 @@ The repository includes:
 - holdout dataset tooling
 - isolated Azure holdout infrastructure in `infra/holdout.bicep`
 
-The holdout infrastructure has been Bicep-build validated and is separated from the main demo environment. A real independent holdout result must not be claimed until a new unseen Prowler dataset has been scanned, labeled and evaluated.
+A controlled independent Azure holdout validation has been completed using four positive findings from checks that were not present in the original tuning FAIL set. Frozen Scoring V2 v1.0 correctly prioritized 4/4 unseen positive findings. Because the holdout contains no unseen negative examples, this result does not independently measure false-positive generalization.
 
 ## Testing and CI
 
@@ -164,6 +164,7 @@ Recent merged project changes have passed the SentinelMind CI workflow.
 - [Final Presentation Outline](docs/final_presentation_outline.md)
 - [AI Safety Model](docs/ai_safety.md)
 - [Detection Metrics](docs/detection_metrics.md)
+- [Independent Holdout Validation](docs/holdout_validation.md)
 - [Data Contracts](docs/contracts.md)
 - [Database Schema](docs/schema.sql)
 - [RAG Documentation](rag/README.md)
@@ -193,7 +194,6 @@ The primary Azure/Prowler-to-human-approved-remediation path has been demonstrat
 
 The following items remain optional or environment-dependent rather than blockers for the functional MVP:
 
-- independent Prowler holdout dataset evaluation
 - real Wazuh 4625 validator execution on an exported dataset
 - a second Wazuh-to-AI end-to-end scenario
 - tenant-side Microsoft Teams workflow provisioning
