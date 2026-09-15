@@ -1,4 +1,4 @@
-﻿import copy
+import copy
 
 import pytest
 
@@ -13,7 +13,7 @@ ANALYSIS_ID = "eedcfb7c-5320-4d3a-a0bf-3d3380dd96ca"
 
 RESOURCE_ID = (
     "/subscriptions/"
-    "d6bbe32e-08e3-4513-aea3-0f36665669c7/"
+    "11111111-2222-3333-4444-555555555555/"
     "resourceGroups/sentinelmind-rg/"
     "providers/Microsoft.Network/"
     "networkSecurityGroups/sentinelmind-soc-nsg"
